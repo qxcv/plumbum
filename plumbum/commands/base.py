@@ -1,7 +1,7 @@
 import subprocess
 import functools
 from contextlib import contextmanager
-from plumbum.commands.processes import run_proc, iter_lines
+from plumbum.commands.processes import run_proc, iter_lines, _register_proc_timeout
 from plumbum.lib import six
 from tempfile import TemporaryFile
 from subprocess import PIPE, Popen
@@ -178,6 +178,10 @@ class BaseCommand(object):
         retcode = kwargs.pop("retcode", 0)
         timeout = kwargs.pop("timeout", None)
         p = self.popen(args, **kwargs)
+        if timeout is not None:
+            # run_proc will do this for us, but run_proc is never executed
+            # unless the caller wants it to be
+            _register_proc_timeout(p, timeout)
         was_run = [False]
         def runner():
             if was_run[0]:
